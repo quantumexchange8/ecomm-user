@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\MainController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,7 +14,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
     Route::get('/main', [MainController::class, 'main']);
-    
+    Route::get('/cart', [CartController::class, 'cart']);
+    Route::get('/getProductListing', [MainController::class, 'getProductListing']);
+
 });
 
 

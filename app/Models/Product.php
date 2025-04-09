@@ -1,17 +1,17 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-class Main extends Model implements HasMedia
-{
-    use HasFactory, InteractsWithMedia;
-    protected $table = 'products';
 
+class Product extends Model implements HasMedia
+{
+    use HasFactory, InteractsWithMedia, SoftDeletes;
+    // Mass assignable fields
+    protected $table = 'products'; 
     protected $fillable = [
         'name',
         'sku',
@@ -25,8 +25,8 @@ class Main extends Model implements HasMedia
         'height',
         'fragile',
         'status',
+       
     ];
-
     public function getImageUrlAttribute()
     {
         return $this->getFirstMediaUrl('product_images') ?: null; 
