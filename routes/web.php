@@ -16,7 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/main', [MainController::class, 'main']);
     Route::get('/cart', [CartController::class, 'cart']);
     Route::get('/getProductListing', [MainController::class, 'getProductListing']);
-
+    Route::get('/store', [CartController::class, 'store']);
 });
 
 

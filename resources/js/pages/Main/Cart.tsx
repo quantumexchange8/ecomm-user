@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { router } from '@inertiajs/react';
 
 type Product = {
   id: number;
   name: string;
   price: number;
   image: string;
+  quantity: number; // Add quantity to track the number of items
 };
 
 const Cart = () => {
@@ -13,12 +16,67 @@ const Cart = () => {
   useEffect(() => {
     const stored = localStorage.getItem("cartItems");
     if (stored) {
-      setCartItems(JSON.parse(stored));
+      const parsedItems: Product[] = JSON.parse(stored);
+  
+      const normalizedItems = parsedItems.map(item => ({
+        ...item,
+        quantity: isNaN(Number(item.quantity)) || item.quantity < 1 ? 1 : item.quantity,
+      }));
+  
+      setCartItems(normalizedItems);
     }
   }, []);
+  
 
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.price, 0);
+  // Fix: Ensure price and quantity are valid numbers
+  const totalPrice = cartItems.reduce((acc, item) => {
+    const price = isNaN(Number(item.price)) ? 0 : Number(item.price); // Ensure price is a valid number
+    const quantity = isNaN(Number(item.quantity)) ? 1 : Number(item.quantity); // Ensure quantity is a valid number
+    return acc + price * quantity;
+  }, 0);
+
   const shipping = 5;
+
+  const handleCheckout = async () => {
+    try {
+      const response = await axios.post('/store', {
+        items: cartItems.map(item => ({
+          product_id: item.id,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      });
+
+      alert('Cart saved successfully!');
+      localStorage.removeItem("cartItems");
+      setCartItems([]);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to save cart.');
+    }
+  };
+
+  const handleRemoveItem = (id: number) => {
+    const updatedCart = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedCart);
+    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+  };
+
+  const handleIncreaseQuantity = (id: number) => {
+    const updatedCart = cartItems.map(item => 
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    setCartItems(updatedCart);
+    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+  };
+
+  const handleDecreaseQuantity = (id: number) => {
+    const updatedCart = cartItems.map(item => 
+      item.id === id && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item
+    );
+    setCartItems(updatedCart);
+    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+  };
 
   return (
     <div className="max-w-6xl mx-auto py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -46,26 +104,33 @@ const Cart = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button className="border px-2">-</button>
+                  <button onClick={() => handleDecreaseQuantity(item.id)} className="border px-2">-</button>
                   <input
                     type="text"
-                    value="1"
+                    value={isNaN(item.quantity) ? 1 : item.quantity} // Fallback to 1 if quantity is NaN
                     readOnly
                     className="w-8 text-center border"
                   />
-                  <button className="border px-2">+</button>
+                  <button onClick={() => handleIncreaseQuantity(item.id)} className="border px-2">+</button>
                 </div>
-                <p className="font-semibold">RM {item.price.toFixed(2)}</p>
-                <button className="text-gray-400 hover:text-black text-xl">
+                <p className="font-semibold">RM {(isNaN(Number(item.price)) ? 0 : Number(item.price)) * (isNaN(Number(item.quantity)) ? 1 : Number(item.quantity))}</p>
+                <button
+                  onClick={() => handleRemoveItem(item.id)}
+                  className="text-gray-400 hover:text-black text-xl"
+                >
                   ×
                 </button>
               </div>
             ))}
           </div>
         )}
-        <button className="mt-10 text-gray-700 hover:underline flex items-center gap-2">
-          ← Back to shop
-        </button>
+       <button
+  onClick={() => router.visit('/main')}
+  className="mt-10 text-gray-700 hover:underline flex items-center gap-2"
+>
+  ← Back to shop
+</button>
+
       </div>
 
       {/* Right - Summary */}
@@ -96,7 +161,7 @@ const Cart = () => {
           <span>TOTAL PRICE</span>
           <span>RM {(totalPrice + shipping).toFixed(2)}</span>
         </div>
-        <button className="w-full bg-black text-white py-3 rounded-sm">
+        <button onClick={handleCheckout} className="w-full bg-black text-white py-3 rounded-sm">
           CHECKOUT
         </button>
       </div>

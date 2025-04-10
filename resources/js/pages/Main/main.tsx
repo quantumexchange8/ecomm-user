@@ -26,6 +26,7 @@ type Product = {
   price: number;
   stock: number;
   category_id: number;
+  category_name: string;
   weight: number;
   width: number;
   length: number;
@@ -34,21 +35,6 @@ type Product = {
   status: string;
   image: string | null; 
 };
-
-const categories = [
-  { image: "/image/l4.jpg", title: "I" },
-  { image: "/image/l4.jpg", title: "Dont" },
-  { image: "/image/l4.jpg", title: "Know" },
-  { image: "/image/l4.jpg", title: "Nak" },
-  { image: "/image/l4.jpg", title: "Letak" },
-  { image: "/image/l4.jpg", title: "Apa" },
-  { image: "/image/l4.jpg", title: "?" },
-  { image: "/image/l4.jpg", title: "Cincai" },
-  { image: "/image/l4.jpg", title: "Write" },
-  { image: "/image/l4.jpg", title: "Can" },
-  { image: "/image/l4.jpg", title: "Mah" },
-  { image: "/image/l4.jpg", title: "?" },
-];
 
 const Main = () => {
   const { products } = usePage<{ products: Product[] }>().props;
@@ -148,7 +134,12 @@ const Main = () => {
     setRows(event.rows);
   };
 
-  const uniqueCategories = Array.from(new Set(getProductListing.map((product) => product.category_id)));
+  const uniqueCategories = Array.from(
+    new Map(
+      getProductListing.map((product) => [product.category_id, product.category_name])
+    ).entries()
+  );
+  
 
   const filteredProducts =
     selectedCategory === "all"
@@ -220,20 +211,21 @@ const Main = () => {
       <Banner />
 
       {/* CATEGORY SECTION */}
-      <section className="w-full bg-gray-100 py-18">
+      <section className="w-full items-center justify-center bg-gray-100 py-18">
         <div className="max-w-7xl mx-auto px-6">
-          {Array.from({ length: Math.ceil(categories.length / 6) }, (_, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-6 gap-4 mb-6">
-              {categories.slice(rowIndex * 6, rowIndex * 6 + 6).map((category, index) => (
-                <div key={index} className="flex items-center bg-white rounded-full shadow-md px-5 py-3 w-full">
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-gray-200">
-                    <img src={category.image} alt={category.title} className="w-full h-full object-cover" />
-                  </div>
-                  <span className="ml-3 text-gray-800 font-medium">{category.title}</span>
-                </div>
-              ))}
-            </div>
-          ))}
+        {Array.from({ length: Math.ceil(uniqueCategories.length / 4) }, (_, rowIndex) => (
+  <div key={rowIndex} className="grid grid-cols-4 gap-4 mb-6">
+    {uniqueCategories.slice(rowIndex * 4, rowIndex * 4 + 4).map(([categoryId, categoryName], index) => (
+      <div key={index} className="flex items-center bg-white rounded-full shadow-md px-5 py-3 w-full">
+        <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-gray-200">
+          {/* Add optional image/icon here */}
+        </div>
+        <span className="ml-3 text-gray-800 font-medium">{categoryName}</span>
+      </div>
+    ))}
+  </div>
+))}
+
         </div>
       </section>
 
@@ -242,9 +234,16 @@ const Main = () => {
         <h2 className="text-2xl font-bold mb-4">PRODUCTS</h2>
         <div className="flex gap-4 mb-10 flex-wrap">
           <button onClick={() => setSelectedCategory("all")} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === "all" ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>All</button>
-          {uniqueCategories.map((categoryId) => (
-            <button key={categoryId} onClick={() => setSelectedCategory(categoryId)} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === categoryId ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>Category {categoryId}</button>
-          ))}
+          {uniqueCategories.map(([categoryId, categoryName]) => (
+  <button
+    key={categoryId}
+    onClick={() => setSelectedCategory(categoryId)}
+    className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === categoryId ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+  >
+    {categoryName}
+  </button>
+))}
+
         </div>
 
 
@@ -260,7 +259,7 @@ const Main = () => {
               />
 
               </div>
-              <p className="text-xs text-gray-400 uppercase mb-1">Category {product.category_id}</p>
+              <p className="text-xs text-gray-400 uppercase mb-1">{product.category_name}</p>
               <h2 className="font-semibold text-sm text-gray-800 leading-tight mb-2">{product.name}</h2>
               <div className="flex items-center justify-center gap-2 text-sm mb-1">
                 <span className="text-red-600 font-bold">RM{product.price.toFixed(2)}</span>

@@ -16,15 +16,17 @@ class MainController extends Controller
     }
 
     public function getProductListing()
-    {
-        $products = Product::with('media')->get();
+{
+    $products = Product::with('media', 'categories')->get();
 
-        $products->each(function($product) {
-            $product->product_name = $product->getFirstMediaUrl('product_images');
-        });
+    $products->each(function($product) {
+        $product->image = $product->getFirstMediaUrl('product_images');
+        $product->category_name = $product->categories ? $product->categories->name : 'Unknown';
+    });
 
-        return response()->json($products);
-    }
+    return response()->json($products);
+}
+
    
     
 }
