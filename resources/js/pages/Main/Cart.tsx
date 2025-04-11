@@ -7,31 +7,36 @@ type Product = {
   name: string;
   price: number;
   image: string;
-  quantity: number; // Add quantity to track the number of items
+  quantity: number;
 };
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<Product[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("cartItems");
-    if (stored) {
-      const parsedItems: Product[] = JSON.parse(stored);
-  
-      const normalizedItems = parsedItems.map(item => ({
-        ...item,
-        quantity: isNaN(Number(item.quantity)) || item.quantity < 1 ? 1 : item.quantity,
-      }));
-  
-      setCartItems(normalizedItems);
-    }
-  }, []);
-  
+    const fetchCart = async () => {
+      try {
+        const response = await axios.get('/fetch');
+        if (response.data.cart) {
+          setCartItems(response.data.cart.items.map((item: any) => ({
+            id: item.product.id,
+            name: item.product.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.product.image || '/images/default-placeholder.png',
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading cart:", err);
+      }
+    };
 
-  // Fix: Ensure price and quantity are valid numbers
+    fetchCart();
+  }, []);
+
   const totalPrice = cartItems.reduce((acc, item) => {
-    const price = isNaN(Number(item.price)) ? 0 : Number(item.price); // Ensure price is a valid number
-    const quantity = isNaN(Number(item.quantity)) ? 1 : Number(item.quantity); // Ensure quantity is a valid number
+    const price = isNaN(Number(item.price)) ? 0 : Number(item.price);
+    const quantity = isNaN(Number(item.quantity)) ? 1 : Number(item.quantity);
     return acc + price * quantity;
   }, 0);
 
@@ -56,30 +61,51 @@ const Cart = () => {
     }
   };
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = async (id: number) => {
     const updatedCart = cartItems.filter(item => item.id !== id);
     setCartItems(updatedCart);
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-  };
+  
+    try {
+      await axios.post('/remove', {
+        product_id: id
+      });
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
+  };  
 
+  const updateQuantityOnServer = async (id: number, quantity: number) => {
+    try {
+      await axios.post('/update', {
+        product_id: id,
+        quantity: quantity
+      });
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
+  };
+  
   const handleIncreaseQuantity = (id: number) => {
-    const updatedCart = cartItems.map(item => 
+    const updatedCart = cartItems.map(item =>
       item.id === id ? { ...item, quantity: item.quantity + 1 } : item
     );
     setCartItems(updatedCart);
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+    const updatedItem = updatedCart.find(item => item.id === id);
+    if (updatedItem) updateQuantityOnServer(id, updatedItem.quantity);
   };
-
+  
   const handleDecreaseQuantity = (id: number) => {
-    const updatedCart = cartItems.map(item => 
+    const updatedCart = cartItems.map(item =>
       item.id === id && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item
     );
     setCartItems(updatedCart);
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+    const updatedItem = updatedCart.find(item => item.id === id);
+    if (updatedItem && updatedItem.quantity > 0) updateQuantityOnServer(id, updatedItem.quantity);
   };
+  
 
   return (
-    <div className="max-w-6xl mx-auto py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="w-full p-15 grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left - Cart Items */}
       <div className="lg:col-span-2">
         <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
@@ -97,6 +123,9 @@ const Cart = () => {
                     src={item.image}
                     alt={item.name}
                     className="w-20 h-20 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/images/default-placeholder.png';
+                    }}
                   />
                   <div>
                     <p className="text-gray-600">Shirt</p>
@@ -107,13 +136,15 @@ const Cart = () => {
                   <button onClick={() => handleDecreaseQuantity(item.id)} className="border px-2">-</button>
                   <input
                     type="text"
-                    value={isNaN(item.quantity) ? 1 : item.quantity} // Fallback to 1 if quantity is NaN
+                    value={isNaN(item.quantity) ? 1 : item.quantity}
                     readOnly
                     className="w-8 text-center border"
                   />
                   <button onClick={() => handleIncreaseQuantity(item.id)} className="border px-2">+</button>
                 </div>
-                <p className="font-semibold">RM {(isNaN(Number(item.price)) ? 0 : Number(item.price)) * (isNaN(Number(item.quantity)) ? 1 : Number(item.quantity))}</p>
+                <p className="font-semibold">
+                  RM {(isNaN(Number(item.price)) ? 0 : Number(item.price)) * (isNaN(Number(item.quantity)) ? 1 : Number(item.quantity))}
+                </p>
                 <button
                   onClick={() => handleRemoveItem(item.id)}
                   className="text-gray-400 hover:text-black text-xl"
@@ -124,13 +155,12 @@ const Cart = () => {
             ))}
           </div>
         )}
-       <button
-  onClick={() => router.visit('/main')}
-  className="mt-10 text-gray-700 hover:underline flex items-center gap-2"
->
-  ← Back to shop
-</button>
-
+        <button
+          onClick={() => router.visit('/main')}
+          className="mt-10 text-gray-700 hover:underline flex items-center gap-2"
+        >
+          ← Back to shop
+        </button>
       </div>
 
       {/* Right - Summary */}

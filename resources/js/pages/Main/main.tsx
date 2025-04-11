@@ -1,7 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import Navbar from "@/layouts/Navbar";
 import { FaHeart, FaSync, FaEye, FaChevronDown } from "react-icons/fa";
-import { motion } from "framer-motion";
 import Footer from "@/layouts/Footer";
 import Banner from "@/layouts/Banner";
 import { usePage } from '@inertiajs/react';
@@ -9,7 +7,6 @@ import { Paginator } from "primereact/paginator";
 import { AddCart, Language, Profile, Robot, Search, Wishlist } from "@/components/outline";
 import { router } from '@inertiajs/react';
 import axios from "axios";
-
 
 const messages = [
   "Enjoy free shipping on orders RM100 up! ! !",
@@ -46,13 +43,10 @@ const Main = () => {
     return stored ? JSON.parse(stored) : [];
   });
   const [showCart, setShowCart] = useState(false); 
-
   const [index, setIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 10, minutes: 34, seconds: 60 });
-
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [getProductListing, setGetProductListing] = useState<Product[]>([]);
-
  
   useEffect(() => {
     fetchProductListing();
@@ -68,7 +62,7 @@ const Main = () => {
         console.error('error', error);
     }
   }
-
+  
   const faqs = [
     { question: "What is your return policy?", answer: "We offer a 30-day return policy for unused items." },
     { question: "How long does shipping take?", answer: "Shipping typically takes 5-7 business days." },
@@ -109,21 +103,20 @@ const Main = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAddToCart = (product: Product) => {
-    setCartItems((prevItems) => {
-      const isExist = prevItems.find((item) => item.id === product.id);
-      if (isExist) {
-        alert("Item already in cart!");
-        return prevItems;
-      }
+  const handleAddToCart = async (product: Product) => {
+    try {
+      await axios.post('/add', {
+        product_id: product.id,
+        quantity: 1, // or however many they choose
+        price: product.price,
+      });
   
-      const updatedCart = [...prevItems, product];
-      localStorage.setItem("cartItems", JSON.stringify(updatedCart)); // persist in localStorage
-      router.visit('/cart'); // navigate to cart page
-      return updatedCart;
-    });
+      alert('Item added to cart!');
+    } catch (error) {
+      console.error('Failed to add item:', error);
+      alert('Failed to add item to cart.');
+    }
   };
-  
 
   const handleClick = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -140,7 +133,6 @@ const Main = () => {
     ).entries()
   );
   
-
   const filteredProducts =
     selectedCategory === "all"
       ? getProductListing
@@ -207,59 +199,49 @@ const Main = () => {
         </nav>
         <hr className="border-t border-gray-300" />
       </div>
-
       <Banner />
-
       {/* CATEGORY SECTION */}
       <section className="w-full items-center justify-center bg-gray-100 py-18">
         <div className="max-w-7xl mx-auto px-6">
-        {Array.from({ length: Math.ceil(uniqueCategories.length / 4) }, (_, rowIndex) => (
-  <div key={rowIndex} className="grid grid-cols-4 gap-4 mb-6">
-    {uniqueCategories.slice(rowIndex * 4, rowIndex * 4 + 4).map(([categoryId, categoryName], index) => (
-      <div key={index} className="flex items-center bg-white rounded-full shadow-md px-5 py-3 w-full">
-        <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-gray-200">
-          {/* Add optional image/icon here */}
-        </div>
-        <span className="ml-3 text-gray-800 font-medium">{categoryName}</span>
-      </div>
-    ))}
-  </div>
-))}
-
+          {Array.from({ length: Math.ceil(uniqueCategories.length / 4) }, (_, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-4 gap-4 mb-6">
+            {uniqueCategories.slice(rowIndex * 4, rowIndex * 4 + 4).map(([categoryId, categoryName], index) => (
+                  <div key={index} className="flex items-center bg-white rounded-full shadow-md px-5 py-3 w-full">
+                    <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-gray-200">
+                    </div>
+                    <span className="ml-3 text-gray-800 font-medium">{categoryName}</span>
+                  </div>
+                ))}
+          </div>
+          ))}
         </div>
       </section>
-
       {/* PRODUCTS */}
       <section className="container mx-auto p-20">
         <h2 className="text-2xl font-bold mb-4">PRODUCTS</h2>
         <div className="flex gap-4 mb-10 flex-wrap">
           <button onClick={() => setSelectedCategory("all")} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === "all" ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>All</button>
           {uniqueCategories.map(([categoryId, categoryName]) => (
-  <button
-    key={categoryId}
-    onClick={() => setSelectedCategory(categoryId)}
-    className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === categoryId ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-  >
-    {categoryName}
-  </button>
-))}
-
+            <button
+              key={categoryId}
+              onClick={() => setSelectedCategory(categoryId)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${selectedCategory === categoryId ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+            >
+              {categoryName}
+            </button>
+          ))}
         </div>
-
-
-
         <div className="flex overflow-x-auto gap-4 py-10 px-4">
           {paginatedProducts.map((product: Product) => (
             <div key={product.id} className="min-w-[250px] max-w-[250px] bg-white rounded-2xl shadow-md flex flex-col items-center text-center p-4 relative">
               <div className="w-full h-36 mb-2 p-10">
-              <img
-                src={product.image ? `/storage/products/${product.image}` : "/image/placeholder.jpg"}
-                alt={product.name}
-                className="w-full h-full object-contain"
-              />
-
+                <img
+                  src={product.image || "/image/placeholder.jpg"}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <p className="text-xs text-gray-400 uppercase mb-1">{product.category_name}</p>
+              <span className="flex flex-col text-xs text-gray-400 uppercase mb-1">{product.category_name}</span>
               <h2 className="font-semibold text-sm text-gray-800 leading-tight mb-2">{product.name}</h2>
               <div className="flex items-center justify-center gap-2 text-sm mb-1">
                 <span className="text-red-600 font-bold">RM{product.price.toFixed(2)}</span>
@@ -274,7 +256,6 @@ const Main = () => {
             </div>
           ))}
         </div>
-
         <div className="flex justify-center mt-10">
           <Paginator
             first={first}
@@ -285,9 +266,6 @@ const Main = () => {
           />
         </div>
       </section>
-
-
-
       <Footer />
     </main>
   );
