@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,6 +21,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/fetch', [CartController::class, 'fetch']);
     Route::post('/update', [CartController::class, 'update']);
     Route::post('/remove', [CartController::class, 'remove']);
+
+    Route::get('/wishlist', [WishlistController::class, 'wishlist']);
+    Route::post('/wishlistAdd', [WishlistController::class, 'wishlistAdd']);
+    Route::post('/wishlistRemove', [WishlistController::class, 'wishlistRemove']);
+    Route::get('/wishlistfetch', [WishlistController::class, 'wishlistfetch']);
+
+
 });
 
 

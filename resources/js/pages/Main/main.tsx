@@ -102,7 +102,18 @@ const Main = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
+  const handleAddToWishlist = async (product: Product) => {
+    try {
+      await axios.post('/wishlistAdd', {
+        product_id: product.id,
+      });
+      alert('Item added to wishlist!');
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+      alert('Failed to add item to wishlist.');
+    }
+  };
+  
   const handleAddToCart = async (product: Product) => {
     try {
       await axios.post('/add', {
@@ -116,10 +127,6 @@ const Main = () => {
       console.error('Failed to add item:', error);
       alert('Failed to add item to cart.');
     }
-  };
-
-  const handleClick = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
   };
 
   const onPageChange = (event: { first: number; rows: number }) => {
@@ -162,7 +169,7 @@ const Main = () => {
           <div className="flex space-x-6 text-gray-600">
             <a href="#" className="hover:text-black">About Us</a>
             <a href="#" className="hover:text-black">My Account</a>
-            <a href="#" className="hover:text-black">Wishlist</a>
+            <a href="/wishlist" className="hover:text-black">Wishlist</a>
             <a href="#" className="hover:text-black">Order Tracking</a>
           </div>
           <div className="flex items-center gap-3">
@@ -248,7 +255,11 @@ const Main = () => {
               </div>
               <div className="flex justify-center text-yellow-500 text-xs mb-2">{"★★★★★"}</div>
               <div className="flex justify-center gap-4 text-gray-500 text-sm mb-4">
-                <FaHeart className="cursor-pointer hover:text-red-500" />
+              <FaHeart
+                  className="cursor-pointer hover:text-red-500"
+                  onClick={() => handleAddToWishlist(product)}
+                />
+
                 <FaSync className="cursor-pointer hover:text-blue-500" />
                 <FaEye className="cursor-pointer hover:text-green-500" />
               </div>
