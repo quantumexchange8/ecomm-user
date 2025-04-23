@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/fetch', [CartController::class, 'fetch']);
     Route::post('/update', [CartController::class, 'update']);
     Route::post('/remove', [CartController::class, 'remove']);
+    Route::post('/checkout', [CartController::class, 'checkout']);
 
     Route::get('/wishlist', [WishlistController::class, 'wishlist']);
     Route::post('/wishlistAdd', [WishlistController::class, 'wishlistAdd']);
@@ -29,7 +30,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 });
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

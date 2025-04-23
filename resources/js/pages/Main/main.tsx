@@ -173,10 +173,10 @@ const Main = () => {
             <a href="#" className="hover:text-black">Order Tracking</a>
           </div>
           <div className="flex items-center gap-3">
-            <button><Profile /></button>
+            <button className="cursor-pointer"><Profile /></button>
             <button
               onClick={() => router.visit('/cart')}
-              className="relative"
+              className="relative cursor-pointer"
               >
               <AddCart />
               {cartItems.length > 0 && (
@@ -185,9 +185,9 @@ const Main = () => {
                 </span>
               )}
             </button>
-            <button><Robot /></button>
-            <button><Wishlist /></button>
-            <button><Language /></button>
+            <button className="cursor-pointer"><Robot /></button>
+            <button className="cursor-pointer"><Wishlist /></button>
+            <button className="cursor-pointer"><Language /></button>
           </div>
         </div>
         <nav className="py-4 px-10 flex justify-between items-center">

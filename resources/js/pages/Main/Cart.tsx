@@ -44,23 +44,38 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     try {
-      const response = await axios.post('/store', {
+      const response = await axios.post('/checkout', {
         items: cartItems.map(item => ({
           product_id: item.id,
           price: item.price,
           quantity: item.quantity,
         })),
+        total: totalPrice + shipping, // 🔥 include total amount
       });
-
-      alert('Cart saved successfully!');
+  
+      alert('Checkout successful!');
       localStorage.removeItem("cartItems");
       setCartItems([]);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        alert(error.response.data.message || 'Insufficient balance.');
+      } else {
+        alert('Failed to checkout.');
+      }
       console.error('Checkout error:', error);
-      alert('Failed to save cart.');
     }
   };
-
+  
+  const handleQuantityChange = (id: number, newQuantity: number) => {
+    if (newQuantity < 1 || isNaN(newQuantity)) return; // Prevent zero or negative values
+  
+    const updatedCart = cartItems.map(item =>
+      item.id === id ? { ...item, quantity: newQuantity } : item
+    );
+    setCartItems(updatedCart);
+    updateQuantityOnServer(id, newQuantity);
+  };
+  
   const handleRemoveItem = async (id: number) => {
     const updatedCart = cartItems.filter(item => item.id !== id);
     setCartItems(updatedCart);
@@ -135,10 +150,11 @@ const Cart = () => {
                 <div className="flex items-center gap-4">
                   <button onClick={() => handleDecreaseQuantity(item.id)} className="border px-2">-</button>
                   <input
-                    type="text"
+                    type="number"
+                    min={1}
                     value={isNaN(item.quantity) ? 1 : item.quantity}
-                    readOnly
-                    className="w-8 text-center border"
+                    onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
+                    className="w-16 text-center border"
                   />
                   <button onClick={() => handleIncreaseQuantity(item.id)} className="border px-2">+</button>
                 </div>

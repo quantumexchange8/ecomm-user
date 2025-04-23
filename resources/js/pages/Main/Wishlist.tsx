@@ -17,7 +17,7 @@ const Wishlist = () => {
 
   const fetchWishlist = async () => {
     try {
-      const response = await axios.get('/fetch');
+      const response = await axios.get('/wishlistfetch');
       setWishlist(response.data.wishlistItems.map((item: any) => ({
         id: item.product.id,
         name: item.product.name,

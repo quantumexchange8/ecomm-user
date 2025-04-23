@@ -13,14 +13,21 @@ class WishlistController extends Controller
     {
         return Inertia::render('Main/Wishlist');
     }
-    public function fetch()
-{
-    $wishlistItems = Auth::user()->wishlist()->with('product.media')->get();
+    public function wishlistfetch()
+    {
+        try {
+            $wishlistItems = Auth::user()->wishlist()->with('product.media')->get();
 
-    return response()->json([
-        'wishlistItems' => $wishlistItems
-    ]);
-}
+            return response()->json([
+                'wishlistItems' => $wishlistItems
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 public function wishlistAdd(Request $request)
 {
